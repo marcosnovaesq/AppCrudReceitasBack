@@ -8,9 +8,35 @@ const auth = require('../../middleware/auth')
 //pega todas as receitas
 router.get('/', [auth], async (req, res) => {
     try {
-        const recipes = await Recipe.find({})
+        let query = {}
+        if (!!req.query.userId) {
+            query["user"] = req.query.userId
+        }
+        const recipes = await Recipe.find(query).lean(true)
         if (recipes.length > 0) {
-            res.status(200).json(recipes)
+            const newArrReceitas = recipes.map(async (value) => {
+                let newObjReceita = {
+                    ...value
+                }
+                const user = await User.findById(value.user)
+                console.log(user)
+                if (user) {
+                    newObjReceita.user = {
+                        user_id: user._id,
+                        user_nome: user.nome
+                    }
+                }
+                else {
+                    newObjReceita.user = {
+                        user_id: "xxxxxx",
+                        user_nome: "N/A"
+                    }
+                }
+                return newObjReceita
+            })
+            Promise.all(newArrReceitas).then(function (results) {
+                res.status(200).json(results)
+            })
         }
         else {
             res.status(400).send({ "erro": "nao tem receitas" })
@@ -26,10 +52,21 @@ router.get('/', [auth], async (req, res) => {
 //pega receita especifica
 router.get('/:id', [auth], async (req, res, next) => {
     try {
-        const receita = await Recipe.findById(req.params.id)
+        const receita = await Recipe.findById(req.params.id).lean(true)
         if (receita) {
-            const user = await User.findById(receita.user).select('_id nome email')
-            receita["user"] = user
+            const user = await User.findById(receita.user).select('_id nome')
+            if (user) {
+                receita["user"] = {
+                    user_id: user._id,
+                    user_nome: user.nome
+                }
+            }
+            else {
+                receita["user"] = {
+                    user_id: "xxxxxx",
+                    user_nome: "N/A"
+                }
+            }
             res.status(200).json(receita)
         }
         else {
@@ -68,7 +105,7 @@ router.post('/new', [
         let recipe = new Recipe({ user, nome, tipo, rendimento, tempo, dificuldade, ingredientes, passos })
         console.log(recipe)
         await recipe.save()
-        res.send(recipe)
+        res.status(200).send(recipe)
     } catch (error) {
         console.log(error.message)
         res.status(500).send({ "Erro::": error.message })
