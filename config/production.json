@@ -1,5 +1,0 @@
-{
-    "mongoURI": "mongodb+srv://root:iqDVpfzqZiwKWfqQ@clusterdefault.sdxyf.gcp.mongodb.net/appReceitas?retryWrites=true&w=majority",
-    "jwtSecret": "F&xO>AiY]J|TYLq*K+riud!a{#EK1i>xCEap]o#/b?u>y:d+*B?,y6iQ)OKfDgs",
-    "githubToken": "<yoursecrectaccesstoken>"
-}
